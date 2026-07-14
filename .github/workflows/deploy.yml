@@ -1,0 +1,47 @@
+name: Deploy Fullstack Application
+
+on:
+  push:
+    branches:
+      - main # Runs whenever you push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: 20
+
+      - name: Install & Build Frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 3.80.37.65
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Go to project folder
+            cd ~/login_site
+
+            # Pull latest changes
+            git pull origin main
+
+            # Copy the built frontend files to Nginx web root
+            # (Note: since Nginx web root requires root permissions, we use sudo)
+            sudo rm -rf /var/www/html/*
+            sudo cp -r dist/* /var/www/html/
+
+            # Install backend dependencies & restart PM2
+            cd server
+            npm install
+            pm2 restart aura-backend || pm2 start index.js --name "aura-backend"
