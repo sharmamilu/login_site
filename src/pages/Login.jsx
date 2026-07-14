@@ -70,7 +70,7 @@ export default function Login() {
     setIsLoading(true);
     setApiError("");
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", data);
+      const response = await axios.post("/api/auth/login", data);
       localStorage.setItem("token", response.data.token);
       setIsLoading(false);
       setShowSuccessToast(true);

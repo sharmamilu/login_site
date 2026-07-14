@@ -72,7 +72,7 @@ export default function Signup() {
     setIsLoading(true);
     setApiError("");
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", data);
+      await axios.post("/api/auth/signup", data);
       setIsLoading(false);
       setShowSuccessToast(true);
       setTimeout(() => {
