@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Check, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import axios from "axios";
 
 const schema = yup.object({
   email: yup
@@ -63,19 +64,25 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data) => {
-    setIsLoading(true);
-    console.log("Submit Login Details:", data);
+  const [apiError, setApiError] = useState("");
 
-    // Simulate API call
-    setTimeout(() => {
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    setApiError("");
+    try {
+      const response = await axios.post("http://localhost:5000/api/auth/login", data);
+      localStorage.setItem("token", response.data.token);
       setIsLoading(false);
       setShowSuccessToast(true);
       setTimeout(() => {
         setShowSuccessToast(false);
         navigate("/dashboard");
       }, 1500);
-    }, 1500);
+    } catch (error) {
+      setIsLoading(false);
+      const errMsg = error.response?.data?.message || "Invalid credentials or server connection issue.";
+      setApiError(errMsg);
+    }
   };
 
   return (
@@ -253,6 +260,12 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {apiError && (
+              <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                <AlertCircle size={16} />
+                <span>{apiError}</span>
+              </div>
+            )}
             {/* Email Address */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-slate-400">
