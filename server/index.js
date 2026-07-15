@@ -13,9 +13,10 @@ app.use(express.json());
 app.use(encryptionMiddleware);
 
 const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/login_site';
+console.log(`Attempting connection to MongoDB URI: ${mongoURI}`);
 mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+  .then(() => console.log(`MongoDB successfully connected to: ${mongoURI}`))
+  .catch(err => console.error(`MongoDB connection error to ${mongoURI}:`, err));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/system', systemRoutes);

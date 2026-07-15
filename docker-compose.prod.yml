@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb_new:
+    image: mongo:latest
+    container_name: login_site_mongodb
+    restart: always
+    ports:
+      - "27019:27017" # Exposed to host 27019, keeping internal isolated
+    volumes:
+      - mongodb_data:/data/db
+
+  backend:
+    build:
+      context: ./server
+      target: production
+    container_name: login_site_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb_new:27017/login_site
+      - PORT=5000
+      - API_ENCRYPTION_KEY=sharmamilu_login_site_secret_encryption_key_2026
+    depends_on:
+      - mongodb_new
+
+  frontend:
+    build:
+      context: .
+      target: production
+    container_name: login_site_frontend
+    restart: always
+    ports:
+      - "8080:80" # Host port 8080, Container port 80
+    depends_on:
+      - backend
+
+volumes:
+  mongodb_data:
