@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
   try {
+    console.log("authController.signup received body:", req.body);
     const { username, email, password } = req.body;
 
     // Check if email already exists
@@ -34,5 +35,18 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('Login error details:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ username: user.username, email: user.email });
+  } catch (error) {
+    console.error("getMe error details:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
