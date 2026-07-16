@@ -21,7 +21,8 @@ import {
   Key,
   AlertCircle,
   Loader2,
-  Lock
+  Lock,
+  RefreshCw
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -43,6 +44,8 @@ export default function Dashboard() {
   });
 
   // System diagnostics state
+  const [sshHost, setSshHost] = useState("3.80.37.65");
+  const [sshUsername, setSshUsername] = useState("ubuntu");
   const [pemKeyContent, setPemKeyContent] = useState("");
   const [pemFileName, setPemFileName] = useState("");
   const [passphrase, setPassphrase] = useState("");
@@ -88,8 +91,8 @@ export default function Dashboard() {
       const response = await axios.post("/api/system/ssh-diagnose", {
         pemKey: keyContent,
         passphrase: passVal,
-        host: "3.80.37.65",
-        username: "ubuntu"
+        host: sshHost,
+        username: sshUsername
       });
       if (response.data && response.data.success) {
         setDiagnosticsResult(response.data);
@@ -837,6 +840,30 @@ export default function Dashboard() {
                     </div>
                   </div>
 
+                  {/* Host IP and Username Configuration */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Host Server IP / Domain</label>
+                      <input 
+                        type="text" 
+                        value={sshHost} 
+                        onChange={(e) => setSshHost(e.target.value)} 
+                        placeholder="e.g. 3.80.37.65" 
+                        className="w-full bg-white/[0.02] border border-white/10 focus:border-indigo-500/30 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none transition"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SSH Username</label>
+                      <input 
+                        type="text" 
+                        value={sshUsername} 
+                        onChange={(e) => setSshUsername(e.target.value)} 
+                        placeholder="e.g. ubuntu" 
+                        className="w-full bg-white/[0.02] border border-white/10 focus:border-indigo-500/30 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none transition"
+                      />
+                    </div>
+                  </div>
+
                   {/* PEM File Dropzone */}
                   <div 
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
@@ -856,6 +883,20 @@ export default function Dashboard() {
                     </span>
                     <span className="text-xs text-slate-500 mt-1">AWS EC2 private key file</span>
                   </div>
+
+                  {/* Manual scan execution button if key is uploaded */}
+                  {pemKeyContent && (
+                    <div className="flex justify-end pt-1">
+                      <button
+                        onClick={() => triggerSshDiagnostics(pemKeyContent, passphrase)}
+                        disabled={diagnosticsLoading}
+                        className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-xs font-bold text-white transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                      >
+                        <RefreshCw size={14} className={diagnosticsLoading ? "animate-spin" : ""} />
+                        <span>Execute Server Scan</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Passphrase prompt */}
                   {showPassphrasePrompt && (
