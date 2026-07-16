@@ -251,7 +251,7 @@ export default function Dashboard() {
       trend: "MongoDB",
       icon: Database,
       color: "text-amber-400 bg-amber-500/10 border-amber-500/10",
-      subtext: `Status: ${systemStats.dbStatus}`,
+      subtext: systemStats.dbName && systemStats.dbName !== 'none' ? `DB: ${systemStats.dbName} (${systemStats.numCollections} collections, ${systemStats.dbDataSize})` : `Status: ${systemStats.dbStatus}`,
     },
   ];
 
@@ -897,33 +897,303 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  {/* Diagnostic Results Grid */}
+                  {/* Diagnostic Results Section */}
                   {diagnosticsResult && !diagnosticsLoading && (
-                    <div className="space-y-4 border-t border-white/5 pt-6 animate-fade-in">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Discovered Active Listening Ports & Services</h4>
-                        <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg border border-indigo-500/10 font-bold">
-                          {diagnosticsResult.parsedData.length} ACTIVE PORTS
-                        </span>
+                    <div className="space-y-6 border-t border-white/5 pt-6 animate-fade-in">
+                      
+                      {/* Infrastructure Design Validation */}
+                      <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Infrastructure Design Validation</h4>
+                          <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg border border-indigo-500/10 font-bold uppercase">
+                            {diagnosticsResult.simulated ? "Simulated Scan" : "Live Server Scan"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Database Card */}
+                          <div className={`p-4 rounded-xl border ${diagnosticsResult.databaseSeparated ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-amber-500/20 bg-amber-500/5'} flex items-start gap-3`}>
+                            <div className={`p-2 rounded-lg ${diagnosticsResult.databaseSeparated ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                              <Database size={18} />
+                            </div>
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-bold text-white">Database Layer</h5>
+                              <p className="text-[11px] text-slate-400">{diagnosticsResult.databaseDetails}</p>
+                              <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${diagnosticsResult.databaseSeparated ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'}`}>
+                                {diagnosticsResult.databaseSeparated ? "✓ Decoupled / Cloud" : "⚠️ Local / Colocated"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Frontend Card */}
+                          <div className={`p-4 rounded-xl border ${diagnosticsResult.frontendSeparated ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-amber-500/20 bg-amber-500/5'} flex items-start gap-3`}>
+                            <div className={`p-2 rounded-lg ${diagnosticsResult.frontendSeparated ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                              <Globe size={18} />
+                            </div>
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-bold text-white">Frontend Presentation</h5>
+                              <p className="text-[11px] text-slate-400">{diagnosticsResult.frontendDetails}</p>
+                              <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${diagnosticsResult.frontendSeparated ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'}`}>
+                                {diagnosticsResult.frontendSeparated ? "✓ Decoupled / CDN" : "⚠️ Local / Colocated"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Overall Infrastructure Quality Banner */}
+                        <div className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${diagnosticsResult.databaseSeparated && diagnosticsResult.frontendSeparated ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-400'}`}>
+                          <AlertCircle size={16} />
+                          <span>
+                            {diagnosticsResult.databaseSeparated && diagnosticsResult.frontendSeparated 
+                              ? "🔥 Perfect DevOps Setup: Presentation and database layers are fully decoupled from your compute server!" 
+                              : "⚠️ Recommendation: Keep separating your infrastructure layers. Keep databases and static files off the compute server to maximize performance."}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {diagnosticsResult.parsedData.map((svc, i) => (
-                          <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-slate-950/20 hover:border-white/10 transition">
-                            <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-extrabold text-emerald-400">
-                                {svc.port}
-                              </div>
-                              <div>
-                                <h5 className="text-xs font-bold text-white">{svc.name}</h5>
-                                <span className="text-[10px] text-slate-500 font-medium">{svc.protocol} protocol</span>
-                              </div>
+                      {/* Server Resource Usage Metrics */}
+                      <div className="space-y-3">
+                        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Host Server Resource Metrics</h4>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          {/* CPU */}
+                          <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/20 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider font-semibold">CPU Usage</span>
+                              <Cpu size={14} className="text-indigo-400" />
                             </div>
-                            <span className="px-2 py-0.5 rounded text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 uppercase tracking-wider">
-                              {svc.status}
+                            <div className="text-lg font-extrabold text-white">{diagnosticsResult.metrics?.cpuUsage || "0%"}</div>
+                            <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                                style={{ width: diagnosticsResult.metrics?.cpuUsage || "0%" }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* RAM */}
+                          <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/20 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider font-semibold">RAM Usage</span>
+                              <Activity size={14} className="text-indigo-400" />
+                            </div>
+                            <div className="text-lg font-extrabold text-white">{diagnosticsResult.metrics?.ramUsage || "0%"}</div>
+                            <div className="text-[9px] text-slate-500 truncate font-semibold">{diagnosticsResult.metrics?.ramDetail}</div>
+                            <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                                style={{ width: diagnosticsResult.metrics?.ramUsage || "0%" }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Disk */}
+                          <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/20 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider font-semibold">Storage</span>
+                              <Layers size={14} className="text-indigo-400" />
+                            </div>
+                            <div className="text-lg font-extrabold text-white">{diagnosticsResult.metrics?.diskUsage || "0%"}</div>
+                            <div className="text-[9px] text-slate-500 truncate font-semibold">{diagnosticsResult.metrics?.diskDetail}</div>
+                            <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                                style={{ width: diagnosticsResult.metrics?.diskUsage || "0%" }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Uptime */}
+                          <div className="p-4 rounded-2xl border border-white/5 bg-slate-950/20 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider font-semibold">Server Uptime</span>
+                              <Terminal size={14} className="text-indigo-400" />
+                            </div>
+                            <div className="text-xs font-extrabold text-white pt-1 truncate font-semibold">{diagnosticsResult.metrics?.sysUptime || "Unknown"}</div>
+                            <span className="text-[9px] text-slate-500">Continuous execution</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Server File Capacity & Memory details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Project directory and swap file status */}
+                        <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/20 space-y-4">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Storage Capacity & VM Status</h4>
+                          
+                          <div className="flex justify-between items-center py-2 border-b border-white/5">
+                            <span className="text-xs text-slate-400">Project Directory Size</span>
+                            <span className="text-xs text-white font-bold">{diagnosticsResult.projectSize || "Unknown"}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center py-2">
+                            <span className="text-xs text-slate-400">Virtual Swap File</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${diagnosticsResult.swapSize > 0 ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/10' : 'text-rose-400 bg-rose-500/10 border border-rose-500/10 animate-pulse'}`}>
+                              {diagnosticsResult.swapSize > 0 ? `Active (${diagnosticsResult.swapSize} MB)` : "Inactive (OOM Crash Risk)"}
                             </span>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Docker disk space usage */}
+                        <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/20 space-y-4">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Docker Space Allocation (docker system df)</h4>
+                          {diagnosticsResult.dockerDf && diagnosticsResult.dockerDf.length > 0 ? (
+                            <div className="space-y-2">
+                              {diagnosticsResult.dockerDf.map((df, idx) => (
+                                <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-white/[0.03] last:border-0">
+                                  <span className="text-slate-400">{df.type}</span>
+                                  <span className="text-white font-bold">{df.size} ({df.count} total)</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-500">No Docker storage information available.</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actionable DevOps Recommendations */}
+                      <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-indigo-400">Actionable Infrastructure Optimizations</h4>
+                          <span className={`text-[10px] px-2.5 py-0.5 rounded-lg font-bold border ${diagnosticsResult.recommendations?.length > 0 ? 'text-amber-400 bg-amber-500/10 border-amber-500/10' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/10'}`}>
+                            {diagnosticsResult.recommendations?.length > 0 ? `${diagnosticsResult.recommendations.length} SUGGESTIONS` : "FULLY OPTIMIZED"}
+                          </span>
+                        </div>
+
+                        {diagnosticsResult.recommendations && diagnosticsResult.recommendations.length > 0 ? (
+                          <div className="space-y-4">
+                            {diagnosticsResult.recommendations.map((rec, idx) => (
+                              <div key={idx} className="p-4 rounded-xl border border-white/5 bg-slate-900/40 space-y-2.5">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                    rec.priority === 'high' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/10' : 
+                                    rec.priority === 'medium' ? 'text-amber-400 bg-amber-500/10 border border-amber-500/10' : 
+                                    'text-sky-400 bg-sky-500/10 border border-sky-500/10'
+                                  }`}>
+                                    {rec.priority} Priority
+                                  </span>
+                                  <h5 className="text-xs font-bold text-white">{rec.title}</h5>
+                                </div>
+                                <p className="text-[11px] text-slate-400 leading-relaxed">{rec.description}</p>
+                                
+                                <div className="mt-2.5 p-3 bg-slate-950 rounded-xl border border-white/5 font-mono text-[10px] text-indigo-300 flex items-center justify-between group">
+                                  <span className="truncate pr-4 select-all">{rec.fixCmd}</span>
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(rec.fixCmd);
+                                      alert("Copied command to clipboard! Paste it into your EC2 terminal.");
+                                    }}
+                                    className="text-[9px] bg-white/5 hover:bg-white/10 px-2 py-1 rounded text-white transition cursor-pointer select-none active:scale-95 shrink-0"
+                                  >
+                                    Copy Command
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-400 flex items-center gap-2 py-2">
+                            <span>🎉 Congratulations! Your host server config is fully optimized with swap memory active and no legacy containers.</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Database Inventory (Mongoose Details) */}
+                      {diagnosticsResult.dbMetrics && diagnosticsResult.dbMetrics.connected && (
+                        <div className="p-5 rounded-2xl border border-white/5 bg-slate-950/20 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Database Statistics</h4>
+                            <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg border border-indigo-500/10 font-bold uppercase">
+                              {diagnosticsResult.dbMetrics.name}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] space-y-0.5">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold block">Collections</span>
+                              <span className="text-sm font-extrabold text-white">{diagnosticsResult.dbMetrics.numCollections}</span>
+                            </div>
+                            <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] space-y-0.5">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold block">Documents</span>
+                              <span className="text-sm font-extrabold text-white">{diagnosticsResult.dbMetrics.objects}</span>
+                            </div>
+                            <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] space-y-0.5">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold block">Data Size</span>
+                              <span className="text-sm font-extrabold text-white">{diagnosticsResult.dbMetrics.dataSize}</span>
+                            </div>
+                            <div className="p-3 bg-white/[0.01] rounded-xl border border-white/[0.03] space-y-0.5">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold block">Registered Users</span>
+                              <span className="text-sm font-extrabold text-white">{diagnosticsResult.dbMetrics.totalUsers}</span>
+                            </div>
+                          </div>
+
+                          {diagnosticsResult.dbMetrics.collections && diagnosticsResult.dbMetrics.collections.length > 0 && (
+                            <div className="space-y-1.5 pt-1">
+                              <span className="text-[9px] text-slate-500 uppercase font-bold block">Discovered Collections</span>
+                              <div className="flex flex-wrap gap-2">
+                                {diagnosticsResult.dbMetrics.collections.map((col, idx) => (
+                                  <span key={idx} className="text-[10px] text-indigo-300 bg-indigo-500/5 px-2.5 py-1 rounded-lg border border-white/5 font-semibold">
+                                    📁 {col}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Running Docker Containers */}
+                      {diagnosticsResult.dockerContainers && diagnosticsResult.dockerContainers.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Docker Containers</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {diagnosticsResult.dockerContainers.map((container, i) => (
+                              <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-slate-950/20 hover:border-white/10 transition">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-extrabold text-indigo-400">
+                                    🐳
+                                  </div>
+                                  <div>
+                                    <h5 className="text-xs font-bold text-white truncate max-w-[150px]">{container.name}</h5>
+                                    <span className="text-[10px] text-slate-500 font-medium">Up since {container.uptime}</span>
+                                  </div>
+                                </div>
+                                <span className="px-2.5 py-0.5 rounded text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 uppercase tracking-wider">
+                                  {container.status}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Discovered Listening Ports */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Discovered Active Listening Ports & Services</h4>
+                          <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg border border-indigo-500/10 font-bold">
+                            {diagnosticsResult.parsedData.length} ACTIVE PORTS
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {diagnosticsResult.parsedData.map((svc, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-slate-950/20 hover:border-white/10 transition">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-extrabold text-emerald-400">
+                                  {svc.port}
+                                </div>
+                                <div>
+                                  <h5 className="text-xs font-bold text-white">{svc.name}</h5>
+                                  <span className="text-[10px] text-slate-500 font-medium">{svc.protocol} protocol</span>
+                                </div>
+                              </div>
+                              <span className="px-2 py-0.5 rounded text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 uppercase tracking-wider">
+                                {svc.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
